@@ -1,0 +1,103 @@
+# This file defines the 3 ArgoCD applications (dev, staging, prod)
+# that monitor the GitOps repo and deploy to the correct namespace.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: poc-dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: poc-staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: poc-prod
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-dev
+  # This app lives in the 'argocd' namespace, but you can change that.
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # --- THIS LINE CHANGED ---
+    # We are removing the "ssh://" prefix. This is the correct format.
+    repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
+    targetRevision: "main"
+    # This path is correct, ArgoCD will find the kustomization.yaml
+    path: "k8s/app/development"
+    # --- THIS BLOCK CHANGED ---
+    # We are replacing the 'helm' block with 'kustomize'
+    kustomize: {}
+  destination:
+    # 'kubernetes.default.svc' means the same cluster ArgoCD is in
+    server: "https://kubernetes.default.svc"
+    # This is the key: deploy 'dev' app to 'poc-dev' namespace
+    namespace: "poc-dev"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    # This ensures the namespace is created if it doesn't exist
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # --- THIS LINE CHANGED ---
+    # We are removing the "ssh://" prefix.
+    # TODO: Make sure this is your actual repo URL
+    repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
+    targetRevision: "main"
+    # This path is correct
+    path: "k8s/app/staging"
+    # --- THIS BLOCK CHANGED ---
+    kustomize: {}
+  destination:
+    server: "https://kubernetes.default.svc"
+    # Deploy 'staging' app to 'poc-staging' namespace
+    namespace: "poc-staging"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # --- THIS LINE CHANGED ---
+    # We are removing the "ssh://" prefix.
+    repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
+    targetRevision: "main"
+    # This path is correct
+    path: "k8s/app/production"
+    # --- THIS BLOCK CHANGED ---
+    kustomize: {}
+  destination:
+    server: "https://kubernetes.default.svc"
+    # Deploy 'prod' app to 'poc-prod' namespace
+    namespace: "poc-prod"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
