@@ -1,0 +1,220 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  # This is the name of your Kargo project
+  name: poc-project
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  # This is the name of your Warehouse
+  name: poc-image-registry
+  # This Warehouse belongs to the 'poc-project' namespace
+  namespace: poc-project
+spec:
+  subscriptions:
+    - image:
+        # --- THIS BLOCK CHANGED ---
+        # Use Kubernetes-hosted registry (no Colima config needed!)
+        # Registry is deployed in the 'registry' namespace
+        repoURL: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+        # This will just find the newest tag pushed.
+        # It's simpler for a PoC than using semver.
+        imageSelectionStrategy: NewestBuild
+        # Allow insecure connection to local registry
+        insecure: true
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: development
+  namespace: poc-project
+spec:
+  # Subscribe to the Warehouse we defined above
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: poc-image-registry
+      sources:
+        direct: true
+  # This block defines what happens *after* a promotion
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: kustomize-set-image
+          config:
+            path: ./repo/k8s/app/development
+            images:
+              - image: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+        - uses: git-commit
+          config:
+            path: ./repo
+            messageFromSteps:
+              - kustomize-set-image
+        - uses: git-push
+          config:
+            path: ./repo
+            targetBranch: main
+        - uses: argocd-update
+          config:
+            apps:
+              - name: my-app-dev
+                namespace: argocd
+  # This block defines *how* to verify the stage is healthy
+  verification:
+    analysisTemplates:
+      - name: "argo-app-health"
+    args:
+      - name: "app-name"
+        value: "my-app-dev"
+      - name: "app-namespace"
+        value: "argocd"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: staging
+  namespace: poc-project
+spec:
+  # This is the key: 'staging' subscribes to 'development'
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: poc-image-registry
+      sources:
+        stages:
+          - development
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: kustomize-set-image
+          config:
+            path: ./repo/k8s/app/staging
+            images:
+              - image: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+        - uses: git-commit
+          config:
+            path: ./repo
+            messageFromSteps:
+              - kustomize-set-image
+        - uses: git-push
+          config:
+            path: ./repo
+            targetBranch: main
+        - uses: argocd-update
+          config:
+            apps:
+              - name: my-app-staging
+                namespace: argocd
+  verification:
+    analysisTemplates:
+      - name: "argo-app-health"
+    args:
+      - name: "app-name"
+        value: "my-app-staging"
+      - name: "app-namespace"
+        value: "argocd"
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: poc-project
+spec:
+  # 'prod' subscribes to 'staging'
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: poc-image-registry
+      sources:
+        stages:
+          - staging
+  promotionTemplate:
+    spec:
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: kustomize-set-image
+          config:
+            path: ./repo/k8s/app/production
+            images:
+              - image: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+        - uses: git-commit
+          config:
+            path: ./repo
+            messageFromSteps:
+              - kustomize-set-image
+        - uses: git-push
+          config:
+            path: ./repo
+            targetBranch: main
+        - uses: argocd-update
+          config:
+            apps:
+              - name: my-app-prod
+                namespace: argocd
+  verification:
+    analysisTemplates:
+      - name: "argo-app-health"
+    args:
+      - name: "app-name"
+        value: "my-app-prod"
+      - name: "app-namespace"
+        value: "argocd"
+---
+# This is the 'AnalysisTemplate' that Kargo uses to check
+# the health of an ArgoCD application.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: argo-app-health
+  namespace: poc-project # Must be in the same namespace as the Stage
+spec:
+  # These are the arguments the 'Stage' will pass in
+  args:
+    - name: app-name
+    - name: app-namespace
+  metrics:
+    - name: check-app-health
+      count: 3 # Run this check 3 times
+      interval: 10s # Wait 10 seconds between checks
+      # This uses a job to check ArgoCD application health
+      provider:
+        job:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: check-health
+                    image: bitnami/kubectl:latest
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        # Check if the ArgoCD Application is Healthy
+                        STATUS=$(kubectl get application {{args.app-name}} -n {{args.app-namespace}} -o jsonpath='{.status.health.status}')
+                        if [ "$STATUS" = "Healthy" ]; then
+                          echo "Application is Healthy"
+                          exit 0
+                        else
+                          echo "Application status: $STATUS"
+                          exit 1
+                        fi
+                restartPolicy: Never
+            backoffLimit: 1

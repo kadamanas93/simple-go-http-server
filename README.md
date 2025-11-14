@@ -75,43 +75,35 @@ docker stop color-box
 docker rm color-box
 ```
 
-## Kubernetes
+## Kubernetes with Kargo
 
-Deploy to your local Kubernetes cluster (Colima, Minikube, Kind, etc.):
+This project uses Kargo for progressive delivery through dev → staging → prod stages.
 
-```bash
-# Deploy the application
-kubectl apply -f k8s-deployment.yaml
-
-# Check status
-kubectl get pods
-kubectl get svc
-
-# Get the service URL (if using Colima)
-kubectl get svc simple-go-http-server
-
-# Access the app
-# For NodePort: http://localhost:<node-port>
-# Get node port with: kubectl get svc simple-go-http-server -o jsonpath='{.spec.ports[0].nodePort}'
-```
-
-### Using with Docker Registry
-
-See **[REGISTRY-GUIDE.md](REGISTRY-GUIDE.md)** for complete instructions on:
-
-- 🏠 **Local Docker Registry** - Run a registry locally
-- 🐳 **Docker Hub** - Push to Docker Hub (free tier)
-- 🐙 **GitHub Container Registry (GHCR)** - Unlimited free repos
-- ⚡ **Colima Direct** - Use images without a registry (easiest!)
-
-Quick start for local registry:
+### Initial Setup
 
 ```bash
-# Setup local registry
-chmod +x local-registry-setup.sh
-./local-registry-setup.sh
+# Deploy registry to Kubernetes and push first image
+chmod +x setup-k8s-registry.sh
+./setup-k8s-registry.sh
 
-# Build and push
-chmod +x push-to-local-registry.sh
-./push-to-local-registry.sh
+# Apply Kargo configuration
+kubectl apply -f k8s/kargo/kargo.yaml
+
+# Verify Warehouse detected the image
+kubectl get freight -n poc-project
 ```
+
+### Push New Versions
+
+```bash
+# Make code changes (e.g., change BoxColor in main.go)
+# Then build and push new version:
+chmod +x push-k8s-registry-version.sh
+./push-k8s-registry-version.sh 0.0.2  # increment version
+
+# Kargo will auto-detect the new image
+# Then promote through stages:
+kubectl promote --stage development --freight <freight-name> -n poc-project
+```
+
+See **[k8s/registry/README.md](k8s/registry/README.md)** for registry details and **[KARGO-WORKFLOW.md](KARGO-WORKFLOW.md)** for complete Kargo usage instructions.
