@@ -1,0 +1,7 @@
+# This file tells Kustomize that the "base" consists
+# of the deployment and service YAMLs.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml
+  - service.yaml
