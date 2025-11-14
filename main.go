@@ -8,7 +8,7 @@ import (
 
 // Change this value to change the color of the box
 // Try: "red", "blue", "green", "purple", "orange", "#FF5733", etc.
-const BoxColor = "blue"
+const BoxColor = "green"
 
 func main() {
 	http.HandleFunc("/", handleHome)
