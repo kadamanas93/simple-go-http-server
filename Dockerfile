@@ -14,13 +14,10 @@ RUN go mod download
 COPY main.go ./
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o server .
+RUN CGO_ENABLED=0 go build -o server .
 
 # Final stage
 FROM alpine:latest
-
-# Install ca-certificates for HTTPS requests (if needed in future)
-RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 

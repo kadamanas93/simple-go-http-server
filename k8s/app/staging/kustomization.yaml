@@ -5,5 +5,5 @@ bases:
 
 # Kargo will update this 'newTag' value.
 images:
-  - name: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+  - name: localhost:5000/simple-go-http-server
     newTag: "0.0.1" # This is the initial tag

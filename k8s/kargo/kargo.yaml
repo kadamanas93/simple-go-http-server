@@ -17,7 +17,7 @@ spec:
         # --- THIS BLOCK CHANGED ---
         # Use Kubernetes-hosted registry (no Colima config needed!)
         # Registry is deployed in the 'registry' namespace
-        repoURL: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+        repoURL: localhost:5000/simple-go-http-server
         # This will just find the newest tag pushed.
         # It's simpler for a PoC than using semver.
         imageSelectionStrategy: NewestBuild
@@ -51,7 +51,7 @@ spec:
           config:
             path: ./repo/k8s/app/development
             images:
-              - image: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+              - image: localhost:5000/simple-go-http-server
         - uses: git-commit
           config:
             path: ./repo
@@ -103,7 +103,7 @@ spec:
           config:
             path: ./repo/k8s/app/staging
             images:
-              - image: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+              - image: localhost:5000/simple-go-http-server
         - uses: git-commit
           config:
             path: ./repo
@@ -154,7 +154,7 @@ spec:
           config:
             path: ./repo/k8s/app/production
             images:
-              - image: docker-registry.registry.svc.cluster.local:5000/simple-go-http-server
+              - image: localhost:5000/simple-go-http-server
         - uses: git-commit
           config:
             path: ./repo

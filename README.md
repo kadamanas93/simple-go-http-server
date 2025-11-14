@@ -82,28 +82,9 @@ This project uses Kargo for progressive delivery through dev → staging → pro
 ### Initial Setup
 
 ```bash
-# Deploy registry to Kubernetes and push first image
-chmod +x setup-k8s-registry.sh
-./setup-k8s-registry.sh
-
 # Apply Kargo configuration
 kubectl apply -f k8s/kargo/kargo.yaml
 
 # Verify Warehouse detected the image
 kubectl get freight -n poc-project
 ```
-
-### Push New Versions
-
-```bash
-# Make code changes (e.g., change BoxColor in main.go)
-# Then build and push new version:
-chmod +x push-k8s-registry-version.sh
-./push-k8s-registry-version.sh 0.0.2  # increment version
-
-# Kargo will auto-detect the new image
-# Then promote through stages:
-kubectl promote --stage development --freight <freight-name> -n poc-project
-```
-
-See **[k8s/registry/README.md](k8s/registry/README.md)** for registry details and **[KARGO-WORKFLOW.md](KARGO-WORKFLOW.md)** for complete Kargo usage instructions.

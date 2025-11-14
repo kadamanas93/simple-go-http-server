@@ -25,19 +25,12 @@ metadata:
 spec:
   project: default
   source:
-    # --- THIS LINE CHANGED ---
-    # We are removing the "ssh://" prefix. This is the correct format.
     repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
     targetRevision: "main"
-    # This path is correct, ArgoCD will find the kustomization.yaml
     path: "k8s/app/development"
-    # --- THIS BLOCK CHANGED ---
-    # We are replacing the 'helm' block with 'kustomize'
     kustomize: {}
   destination:
-    # 'kubernetes.default.svc' means the same cluster ArgoCD is in
     server: "https://kubernetes.default.svc"
-    # This is the key: deploy 'dev' app to 'poc-dev' namespace
     namespace: "poc-dev"
   syncPolicy:
     automated:
@@ -55,18 +48,12 @@ metadata:
 spec:
   project: default
   source:
-    # --- THIS LINE CHANGED ---
-    # We are removing the "ssh://" prefix.
-    # TODO: Make sure this is your actual repo URL
     repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
     targetRevision: "main"
-    # This path is correct
     path: "k8s/app/staging"
-    # --- THIS BLOCK CHANGED ---
     kustomize: {}
   destination:
     server: "https://kubernetes.default.svc"
-    # Deploy 'staging' app to 'poc-staging' namespace
     namespace: "poc-staging"
   syncPolicy:
     automated:
@@ -83,17 +70,12 @@ metadata:
 spec:
   project: default
   source:
-    # --- THIS LINE CHANGED ---
-    # We are removing the "ssh://" prefix.
     repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
     targetRevision: "main"
-    # This path is correct
     path: "k8s/app/production"
-    # --- THIS BLOCK CHANGED ---
     kustomize: {}
   destination:
     server: "https://kubernetes.default.svc"
-    # Deploy 'prod' app to 'poc-prod' namespace
     namespace: "poc-prod"
   syncPolicy:
     automated:
