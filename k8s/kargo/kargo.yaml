@@ -14,7 +14,7 @@ metadata:
 spec:
   subscriptions:
     - image:
-        repoURL: registry:5000/simple-go-http-server
+        repoURL: host.docker.internal:5001/simple-go-http-server
         imageSelectionStrategy: NewestBuild
 ---
 apiVersion: kargo.akuity.io/v1alpha1
@@ -44,7 +44,7 @@ spec:
           config:
             path: ./repo/k8s/app/development
             images:
-              - image: localhost:5001/simple-go-http-server
+              - image: host.docker.internal:5001/simple-go-http-server
         - uses: git-commit
           config:
             path: ./repo
@@ -96,7 +96,7 @@ spec:
           config:
             path: ./repo/k8s/app/staging
             images:
-              - image: localhost:5001/simple-go-http-server
+              - image: host.docker.internal:5001/simple-go-http-server
         - uses: git-commit
           config:
             path: ./repo
@@ -147,7 +147,7 @@ spec:
           config:
             path: ./repo/k8s/app/production
             images:
-              - image: localhost:5001/simple-go-http-server
+              - image: host.docker.internal:5001/simple-go-http-server
         - uses: git-commit
           config:
             path: ./repo
