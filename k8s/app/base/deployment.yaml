@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: localhost:5001/simple-go-http-server:0.0.1
+        image: ghcr.io/kadamanas93/simple-go-http-server/simple-go-http-server:0.0.1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8090
