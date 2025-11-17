@@ -15,7 +15,7 @@ spec:
         app: simple-go-http-server
     spec:
       containers:
-      - image: ghcr.io/kadamanas93/simple-go-http-server:0.0.1
+      - image: ghcr.io/kadamanas93/simple-go-http-server:0.0.2
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
