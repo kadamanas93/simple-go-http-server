@@ -17,69 +17,31 @@ metadata:
   name: poc-prod
 ---
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
-  name: my-app-dev
-  # This app lives in the 'argocd' namespace, but you can change that.
+  name: simple-go-http-server
   namespace: argocd
 spec:
-  project: default
-  source:
-    repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
-    targetRevision: "main"
-    path: "k8s/app/development"
-    kustomize: {}
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: "poc-dev"
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    # This ensures the namespace is created if it doesn't exist
-    syncOptions:
-      - CreateNamespace=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: my-app-staging
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
-    targetRevision: "main"
-    path: "k8s/app/staging"
-    kustomize: {}
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: "poc-staging"
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: my-app-prod
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: "git@github.com:kadamanas93/simple-go-http-server.git"
-    targetRevision: "main"
-    path: "k8s/app/production"
-    kustomize: {}
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: "poc-prod"
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+  generators:
+  - list:
+      elements:
+      - stage: dev
+      - stage: staging
+      - stage: prod
+  template:
+    metadata:
+      name: simple-go-http-server-{{stage}}
+      annotations:
+        kargo.akuity.io/authorized-stage: simple-go-http-server:{{stage}}
+    spec:
+      project: default
+      source:
+        repoURL: git@github.com:kadamanas93/simple-go-http-server.git
+        targetRevision: k8s/app/stages/{{stage}}
+        path: .
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: poc-{{stage}}
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
