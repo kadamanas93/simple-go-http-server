@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: simple-go-http-server
+  name: simple-go-http-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: simple-go-http-server
+  template:
+    metadata:
+      labels:
+        app: simple-go-http-server
+    spec:
+      containers:
+      - image: ghcr.io/kadamanas93/simple-go-http-server:0.0.1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8090
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        name: server
+        ports:
+        - containerPort: 8090
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8090
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
