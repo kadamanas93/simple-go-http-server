@@ -32,12 +32,12 @@ spec:
     metadata:
       name: simple-go-http-server-{{stage}}
       annotations:
-        kargo.akuity.io/authorized-stage: simple-go-http-server:{{stage}}
+        kargo.akuity.io/authorized-stage: poc-project:{{stage}}
     spec:
       project: default
       source:
         repoURL: https://github.com/kadamanas93/simple-go-http-server.git
-        targetRevision: k8s/app/stages/{{stage}}
+        targetRevision: stage/{{stage}}
         path: .
       destination:
         server: https://kubernetes.default.svc
