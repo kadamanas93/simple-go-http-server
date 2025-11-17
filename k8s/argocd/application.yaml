@@ -36,7 +36,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: git@github.com:kadamanas93/simple-go-http-server.git
+        repoURL: https://github.com/kadamanas93/simple-go-http-server.git
         targetRevision: k8s/app/stages/{{stage}}
         path: .
       destination:
