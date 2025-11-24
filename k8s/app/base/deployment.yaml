@@ -21,6 +21,9 @@ spec:
         ports:
         - containerPort: 8090
           name: http
+        env:
+        - name: Environment
+          value: "base"
         resources:
           requests:
             memory: "64Mi"

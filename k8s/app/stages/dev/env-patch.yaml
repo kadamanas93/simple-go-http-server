@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-go-http-server
+spec:
+  template:
+    spec:
+      containers:
+      - name: server
+        env:
+        - name: Environment
+          value: "dev"
+

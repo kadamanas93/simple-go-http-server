@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 // Change this value to change the color of the box
 // Try: "red", "blue", "green", "purple", "orange", "#FF5733", etc.
-const BoxColor = "blue"
+const BoxColor = "green"
 
 func main() {
 	http.HandleFunc("/", handleHome)
 
-	port := "8090"
+	port := "8081"
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	fmt.Printf("Current box color: %s\n", BoxColor)
 
@@ -23,6 +24,11 @@ func main() {
 }
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
+	environment := os.Getenv("Environment")
+	if environment == "" {
+		environment = "Not Set"
+	}
+
 	html := fmt.Sprintf(`
 <!DOCTYPE html>
 <html lang="en">
@@ -75,6 +81,12 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
             margin-top: 20px;
             font-size: 14px;
         }
+        .environment {
+            color: #333;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -82,13 +94,11 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
         <h1>🎨 Simple Color Box</h1>
         <div class="color-box"></div>
         <div class="color-name">%s</div>
-        <div class="info">
-            To change the color, edit the <code>BoxColor</code> constant in <code>main.go</code>
-        </div>
+        <div class="environment">Environment: %s</div>
     </div>
 </body>
 </html>
-	`, BoxColor, BoxColor, BoxColor)
+	`, BoxColor, BoxColor, BoxColor, environment)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, html)
