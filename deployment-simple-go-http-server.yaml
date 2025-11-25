@@ -18,7 +18,7 @@ spec:
       - env:
         - name: Environment
           value: dev
-        image: ghcr.io/kadamanas93/simple-go-http-server:0.0.4
+        image: ghcr.io/kadamanas93/simple-go-http-server:0.0.5
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
