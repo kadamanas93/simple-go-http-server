@@ -18,7 +18,7 @@ spec:
       - env:
         - name: Environment
           value: staging
-        image: ghcr.io/kadamanas93/simple-go-http-server:0.0.6
+        image: ghcr.io/kadamanas93/simple-go-http-server:0.0.7
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
