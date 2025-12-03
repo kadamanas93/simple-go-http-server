@@ -48,11 +48,53 @@ go build -o server
 
 ## Docker
 
-### Build the Docker image:
+### Build the Docker image (single architecture):
 
 ```bash
 docker build -t simple-go-http-server .
 ```
+
+### Build multi-architecture image (arm64 + amd64):
+
+To build an image that works on both ARM64 (Apple Silicon) and AMD64 (Intel) architectures:
+
+1. **Set up Docker buildx** (if not already done):
+   ```bash
+   docker buildx create --name multiarch --use
+   docker buildx inspect --bootstrap
+   ```
+
+2. **Login to GitHub Container Registry**:
+   ```bash
+   echo $GITHUB_TOKEN | docker login ghcr.io -u kadamanas93 --password-stdin
+   ```
+   (Replace `$GITHUB_TOKEN` with your GitHub Personal Access Token with `write:packages` permission)
+
+3. **Build and push multi-architecture image**:
+   ```bash
+   docker buildx build \
+     --platform linux/amd64,linux/arm64 \
+     -t ghcr.io/kadamanas93/simple-go-http-server:0.0.7 \
+     -t ghcr.io/kadamanas93/simple-go-http-server:latest \
+     --push \
+     .
+   ```
+
+   Or for a specific version:
+   ```bash
+   VERSION=0.0.7
+   docker buildx build \
+     --platform linux/amd64,linux/arm64 \
+     -t ghcr.io/kadamanas93/simple-go-http-server:${VERSION} \
+     --push \
+     .
+   ```
+
+4. **Verify the multi-architecture manifest**:
+   ```bash
+   docker manifest inspect ghcr.io/kadamanas93/simple-go-http-server:0.0.7
+   ```
+   You should see both `linux/amd64` and `linux/arm64` in the output.
 
 ### Run the container:
 
